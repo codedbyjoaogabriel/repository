@@ -3,122 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slides | João Gabriel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Repositório de Slides HD | João Gabriel</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #6366f1;
-            --bg: #0b0e14;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.1);
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0b0e14 70%);
-            color: #f8fafc;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
+            color: var(--text);
             margin: 0;
+            padding: 20px;
             min-height: 100vh;
         }
 
-        header { padding: 4rem 2rem; text-align: center; }
-        header h1 { font-size: 2.2rem; font-weight: 600; letter-spacing: -1px; margin: 0; }
-        header p { color: #64748b; margin-top: 8px; }
+        header { text-align: center; padding: 50px 0; }
+        header h1 { font-size: 2.5rem; letter-spacing: -1.5px; margin: 0; }
+        header p { color: #94a3b8; margin-top: 10px; }
 
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem 5rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
         }
 
-        /* Card sem imagem, focado no título */
+        /* Estilo do Card com Capa Automática */
         .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
+            background: var(--card);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 140px;
-            transition: all 0.3s ease;
+            overflow: hidden;
             cursor: pointer;
-            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.07);
+            transform: translateY(-10px);
             border-color: var(--primary);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
 
-        .card-icon {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            opacity: 0.7;
+        .canvas-container {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
         }
 
-        .card h3 {
-            margin: 0;
-            font-size: 1.1rem;
-            font-weight: 500;
-            line-height: 1.4;
-            color: #f1f5f9;
-            text-transform: capitalize;
+        canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        .card-footer {
-            margin-top: 1rem;
-            font-size: 0.75rem;
-            color: var(--primary);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        .card-info { padding: 20px; }
+        .card-info h3 { margin: 0; font-size: 1.1rem; text-transform: capitalize; font-weight: 500; }
 
-        /* Visualizador */
+        /* Visualizador Fullscreen HD */
         #viewer-modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.96);
+            background: #000;
             z-index: 1000;
-            padding: 1.5rem;
+            padding: 15px;
         }
 
-        #pdf-iframe { width: 100%; height: 100%; border: none; border-radius: 8px; }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 12px;
+            background: #fff;
+        }
 
         .close-btn {
             position: absolute;
-            top: 1rem;
-            right: 2rem;
+            top: 25px;
+            right: 40px;
             background: #fff;
+            color: #000;
             border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 10px 25px;
+            border-radius: 30px;
             font-weight: 600;
             cursor: pointer;
             z-index: 1001;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
+
+        .close-btn:hover { background: #ef4444; color: #fff; }
+
+        /* Loader */
+        .loader { position: absolute; font-size: 0.8rem; color: #64748b; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Repositório de Slides</h1>
-        <p>João Gabriel • Ceará</p>
+        <h1>Biblioteca de Slides</h1>
+        <p>Alta Definição • Gerado Automaticamente</p>
     </header>
 
     <div class="container">
-        <div id="file-grid" class="grid">Carregando...</div>
+        <div id="file-grid" class="grid">
+            </div>
     </div>
 
     <div id="viewer-modal">
-        <button class="close-btn" onclick="closeViewer()">FECHAR</button>
-        <iframe id="pdf-iframe"></iframe>
+        <button class="close-btn" onclick="closeViewer()">Fechar ESC</button>
+        <iframe id="pdf-frame"></iframe>
     </div>
 
     <script>
@@ -126,54 +132,88 @@
         const REPO = 'repository';
         const FOLDER = 'slides';
 
-        async function loadFiles() {
+        // Configuração do PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        async function loadSlides() {
             const grid = document.getElementById('file-grid');
             try {
                 const response = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FOLDER}`);
                 const files = await response.json();
                 
-                grid.innerHTML = '';
-                // Filtra PDF ou PPTX
-                const validFiles = files.filter(f => f.name.endsWith('.pdf') || f.name.endsWith('.pptx'));
+                // Filtra apenas arquivos PDF
+                const pdfFiles = files.filter(f => f.name.toLowerCase().endsWith('.pdf'));
 
-                validFiles.forEach(file => {
-                    const isPdf = file.name.endsWith('.pdf');
-                    const cleanName = file.name.replace('.pdf', '').replace('.pptx', '').replace(/-/g, ' ');
+                if (pdfFiles.length === 0) {
+                    grid.innerHTML = '<p>Nenhum arquivo PDF encontrado na pasta /slides.</p>';
+                    return;
+                }
+
+                grid.innerHTML = '';
+
+                pdfFiles.forEach(file => {
+                    const cleanName = file.name.replace('.pdf', '').replace(/-/g, ' ');
                     const fileUrl = `https://${USER}.github.io/${REPO}/${FOLDER}/${encodeURIComponent(file.name)}`;
                     
-                    // Se for PPTX, usa o visualizador da Microsoft, se for PDF abre direto (melhor qualidade)
-                    const finalUrl = isPdf ? fileUrl : `https://view.officeapps.live.com/op/embed.aspx?src=${fileUrl}`;
-
                     const card = document.createElement('div');
                     card.className = 'card';
+                    const canvasId = `canvas-${file.sha}`;
+                    
                     card.innerHTML = `
-                        <div>
-                            <div class="card-icon">${isPdf ? '📄' : '📊'}</div>
+                        <div class="canvas-container">
+                            <span class="loader">Carregando capa...</span>
+                            <canvas id="${canvasId}"></canvas>
+                        </div>
+                        <div class="card-info">
                             <h3>${cleanName}</h3>
                         </div>
-                        <div class="card-footer">${isPdf ? 'Visualizar PDF' : 'Abrir PowerPoint'}</div>
                     `;
                     
                     card.onclick = () => {
-                        document.getElementById('pdf-iframe').src = finalUrl;
+                        document.getElementById('pdf-frame').src = fileUrl;
                         document.getElementById('viewer-modal').style.display = 'block';
                         document.body.style.overflow = 'hidden';
                     };
+                    
                     grid.appendChild(card);
+                    generateThumbnail(fileUrl, canvasId);
                 });
+            } catch (error) {
+                grid.innerHTML = '<p>Erro ao carregar repositório. Verifique se a pasta /slides existe.</p>';
+            }
+        }
+
+        async function generateThumbnail(url, canvasId) {
+            try {
+                const loadingTask = pdfjsLib.getDocument(url);
+                const pdf = await loadingTask.promise;
+                const page = await pdf.getPage(1); // Captura a primeira página
+                
+                const canvas = document.getElementById(canvasId);
+                const context = canvas.getContext('2d');
+                
+                const viewport = page.getViewport({ scale: 0.8 });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                
+                // Esconde o texto de "Carregando"
+                canvas.parentElement.querySelector('.loader').style.display = 'none';
             } catch (e) {
-                grid.innerHTML = '<p>Erro: Certifique-se de que a pasta "/slides" existe.</p>';
+                console.error("Erro na miniatura:", e);
             }
         }
 
         function closeViewer() {
             document.getElementById('viewer-modal').style.display = 'none';
-            document.getElementById('pdf-iframe').src = '';
+            document.getElementById('pdf-frame').src = '';
             document.body.style.overflow = 'auto';
         }
 
         window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeViewer(); });
-        loadFiles();
+        
+        loadSlides();
     </script>
 </body>
 </html>
