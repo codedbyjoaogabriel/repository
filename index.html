@@ -4,14 +4,9 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>Slides | João Gabriel</title>
-
-<!-- Segurança -->
-<meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
-<meta name="referrer" content="no-referrer">
+<title>Biblioteca de Slides</title>
 
 <meta http-equiv="Content-Security-Policy"
 content="
@@ -19,300 +14,44 @@ default-src 'self';
 script-src 'self' https://cdnjs.cloudflare.com;
 style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
 font-src https://fonts.gstatic.com;
-img-src 'self' data:;
-frame-src 'self' https://*.github.io;
 connect-src https://api.github.com;
+frame-src https://*.github.io;
 ">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"
-integrity="sha512-GO9KfL7iHkJ2pUQhK5S3AyO9h7qv2lQ7S7VbLz2h9k8V9a8rVd3iF9Z8T2w1Q4m3"
-crossorigin="anonymous"></script>
+<link rel="stylesheet" href="css/style.css">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-<style>
-
-/* CSS original mantido */
-
-:root{
---bg:#0b0b0f;
---card:#121217;
---card-hover:#1b1b22;
---border:#23232d;
---text:#ffffff;
---sub:#8c8c9a;
---accent:#6366f1;
-}
-
-*{box-sizing:border-box;}
-
-body{
-margin:0;
-font-family:'Inter',sans-serif;
-background:var(--bg);
-color:var(--text);
-}
-
-/* restante do CSS igual ao seu */
-
-</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 
 </head>
 
 <body>
 
-<header>
+<header class="hero">
 
-<h1>📚 Biblioteca de Slides</h1>
+<h1>Biblioteca de Slides</h1>
 
-<div class="search">
-<input id="search" placeholder="Pesquisar slides..." autocomplete="off">
-</div>
+<input
+id="search"
+placeholder="Pesquisar matéria ou slide..."
+autocomplete="off"
+/>
 
 </header>
 
-<div class="container" id="subjects"></div>
+<main id="subjects"></main>
 
-<div id="viewer-modal">
+<div id="viewer">
 
-<button class="close-btn" onclick="closeViewer()">FECHAR</button>
+<button id="close">Fechar</button>
 
-<iframe
-id="pdf-frame"
-sandbox="allow-same-origin allow-downloads allow-scripts"
-loading="lazy">
-</iframe>
+<iframe id="frame"></iframe>
 
 </div>
 
-<footer>
-João Gabriel • Repositório de Estudos
-</footer>
-
-<script>
-
-"use strict"
-
-const USER='codedbyjoaogabriel'
-const REPO='repository'
-const ROOT='slides'
-
-pdfjsLib.GlobalWorkerOptions.workerSrc=
-'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js'
-
-function sanitize(text){
-return text.replace(/[<>&"'`]/g,"")
-}
-
-async function safeFetch(url){
-
-const controller=new AbortController()
-
-const timeout=setTimeout(()=>{
-controller.abort()
-},8000)
-
-try{
-
-const res=await fetch(url,{
-method:"GET",
-signal:controller.signal,
-headers:{
-"Accept":"application/json"
-}
-})
-
-clearTimeout(timeout)
-
-if(!res.ok) throw new Error("Erro na API")
-
-return await res.json()
-
-}catch(err){
-
-console.error("Fetch error:",err)
-
-return []
-
-}
-
-}
-
-async function loadSubjects(){
-
-const container=document.getElementById("subjects")
-
-const folders=await safeFetch(
-`https://api.github.com/repos/${USER}/${REPO}/contents/${ROOT}`
-)
-
-folders.forEach(folder=>{
-if(folder.type==="dir"){
-createSubject(folder)
-}
-})
-
-}
-
-async function createSubject(folder){
-
-const container=document.getElementById("subjects")
-
-const section=document.createElement("div")
-section.className="subject"
-
-const title=sanitize(folder.name.replace(/-/g," "))
-
-section.innerHTML=`
-<h2>📁 ${title}</h2>
-<div class="grid" id="grid-${folder.name}"></div>
-`
-
-container.appendChild(section)
-
-const grid=document.getElementById(`grid-${folder.name}`)
-
-const files=await safeFetch(folder.url)
-
-files
-.filter(f=>f.name.endsWith(".pdf"))
-.forEach(file=>{
-
-const clean=sanitize(file.name.replace(".pdf","").replace(/-/g," "))
-
-const url=
-`https://${USER}.github.io/${REPO}/${ROOT}/${folder.name}/${encodeURIComponent(file.name)}`
-
-const canvasId=`canvas-${file.sha}`
-
-const card=document.createElement("div")
-card.className="card"
-
-card.innerHTML=`
-
-<div class="canvas-container">
-
-<span class="loader">carregando...</span>
-
-<canvas id="${canvasId}"></canvas>
-
-</div>
-
-<div class="card-info">
-
-<h3>${clean}</h3>
-
-<span>${sanitize(folder.name)}</span>
-
-</div>
-
-`
-
-card.addEventListener("click",()=>openPDF(url))
-
-grid.appendChild(card)
-
-generateThumbnail(url,canvasId)
-
-})
-
-}
-
-async function generateThumbnail(url,canvasId){
-
-try{
-
-const pdf=await pdfjsLib.getDocument({
-url:url,
-disableAutoFetch:true,
-disableStream:true
-}).promise
-
-const page=await pdf.getPage(1)
-
-const canvas=document.getElementById(canvasId)
-
-if(!canvas) return
-
-const ctx=canvas.getContext("2d")
-
-const viewport=page.getViewport({scale:1.5})
-
-canvas.width=viewport.width
-canvas.height=viewport.height
-
-await page.render({
-canvasContext:ctx,
-viewport
-}).promise
-
-const loader=canvas.parentElement.querySelector(".loader")
-if(loader) loader.remove()
-
-}catch(e){
-
-console.error("Erro thumbnail:",e)
-
-}
-
-}
-
-function openPDF(url){
-
-const frame=document.getElementById("pdf-frame")
-
-frame.src=url+"#toolbar=0&view=FitH"
-
-const modal=document.getElementById("viewer-modal")
-
-modal.style.display="block"
-
-document.body.style.overflow="hidden"
-
-if(modal.requestFullscreen){
-modal.requestFullscreen().catch(()=>{})
-}
-
-}
-
-function closeViewer(){
-
-const modal=document.getElementById("viewer-modal")
-
-modal.style.display="none"
-
-document.getElementById("pdf-frame").src=""
-
-document.body.style.overflow="auto"
-
-if(document.fullscreenElement){
-document.exitFullscreen().catch(()=>{})
-}
-
-}
-
-document.getElementById("search")
-.addEventListener("input",e=>{
-
-const term=e.target.value.toLowerCase()
-
-document.querySelectorAll(".card").forEach(card=>{
-
-const text=card.innerText.toLowerCase()
-
-card.style.display=text.includes(term)?"block":"none"
-
-})
-
-})
-
-window.addEventListener("keydown",e=>{
-if(e.key==="Escape") closeViewer()
-})
-
-loadSubjects()
-
-</script>
+<script src="js/github-api.js"></script>
+<script src="js/app.js"></script>
+<script src="js/viewer.js"></script>
+<script src="js/search.js"></script>
 
 </body>
 </html>
